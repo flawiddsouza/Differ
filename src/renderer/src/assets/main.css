@@ -37,3 +37,7 @@ body {
   text-align: left;
   transform: translateZ(0);
 }
+
+.d2h-file-list-title {
+  display: none;
+}

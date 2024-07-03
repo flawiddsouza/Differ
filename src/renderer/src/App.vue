@@ -10,8 +10,8 @@ const leftBranch = ref('')
 const rightBranch = ref('')
 const diffFiles = ref([])
 const diffByFile = ref({})
-const diff = ref('')
 const selectedDiffFileName = ref('')
+const diffRefs = ref({})
 
 watch(repoPath, (value) => {
   localStorage.setItem('repoPath', value)
@@ -32,7 +32,7 @@ async function compareBranches() {
     rightBranch: rightBranch.value
   })
 
-  diffByFile.value = {}
+  const diffByFileData = {}
 
   diffFiles.value = response.diff.map((diffItem) => {
     const oldFileName = diffItem.oldFileName.replace(/^a\//, '')
@@ -40,22 +40,31 @@ async function compareBranches() {
 
     const fileName = oldFileName === newFileName ? oldFileName : `${oldFileName} -> ${newFileName}`
 
-    diffByFile.value[fileName] = diffItem
+    diffByFileData[fileName] = getDiff(diffItem)
 
     return {
       fileName,
     }
   })
+
+  diffByFile.value = diffByFileData
 }
 
-function loadDiffForFile(fileName) {
-  selectedDiffFileName.value = fileName
-
-  const unifiedDiff = Diff.formatPatch(diffByFile.value[fileName])
+function getDiff(diff) {
+  const unifiedDiff = Diff.formatPatch(diff)
   const diffJson = Diff2html.parse(unifiedDiff)
-  diff.value = Diff2html.html(diffJson, {
+  return Diff2html.html(diffJson, {
     colorScheme: 'dark',
     highlight: true,
+  })
+}
+
+function focusDiff(fileName) {
+  selectedDiffFileName.value = fileName
+
+  diffRefs.value[fileName].scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
   })
 }
 
@@ -87,11 +96,13 @@ onMounted(() => {
     </div>
     <div style="overflow: auto; margin-top: 1rem; display: grid; grid-template-columns: 200px 1fr;">
       <div style="overflow: auto;">
-        <div v-for="diffFile in diffFiles" @click="loadDiffForFile(diffFile.fileName)" class="sidebar-item" :class="{ active: selectedDiffFileName === diffFile.fileName }">
-          {{ diffFile.fileName }}
-        </div>
+          <div v-for="diffFile in diffFiles" @click="focusDiff(diffFile.fileName)" class="sidebar-item" :class="{ active: selectedDiffFileName === diffFile.fileName }">
+            {{ diffFile.fileName }}
+          </div>
       </div>
-      <div style="overflow: auto;" v-html="diff"></div>
+      <div style="overflow: auto;">
+        <div :ref="element => { diffRefs[fileName] = element }" v-html="diffByFile[fileName]" v-for="fileName of Object.keys(diffByFile)"></div>
+      </div>
     </div>
   </div>
   <!-- <Versions /> -->
