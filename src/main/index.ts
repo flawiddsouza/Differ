@@ -2,6 +2,10 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import SimpleGit from 'simple-git'
+import Diff from 'diff'
+
+const git = SimpleGit()
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +55,20 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('compareBranches', async(_event, { repoPath, leftBranch, rightBranch }) => {
+    console.log('compareBranches', { repoPath, leftBranch, rightBranch })
+
+    // substitute ~ with user home directory
+    const homedir = require('os').homedir()
+    repoPath = repoPath.replace('~', homedir)
+
+    git.cwd(repoPath)
+
+    const diff = await git.diff([`${leftBranch}..${rightBranch}`])
+    const parsedDiff = Diff.parsePatch(diff)
+
+    return { diff: parsedDiff }
+  })
 
   createWindow()
 

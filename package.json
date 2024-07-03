@@ -23,7 +23,10 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
-    "electron-updater": "^6.1.7"
+    "diff": "^5.2.0",
+    "diff2html": "^3.4.48",
+    "electron-updater": "^6.1.7",
+    "simple-git": "^3.25.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.2",
