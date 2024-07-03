@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import Versions from './components/Versions.vue'
 import * as Diff2html from 'diff2html'
 import * as Diff from 'diff'
@@ -12,6 +12,8 @@ const diffFiles = ref([])
 const diffByFile = ref({})
 const selectedDiffFileName = ref('')
 const diffRefs = ref({})
+const sidebarRefs = ref({})
+const manualScrolling = ref(true)
 
 watch(repoPath, (value) => {
   localStorage.setItem('repoPath', value)
@@ -62,16 +64,66 @@ function getDiff(diff) {
 function focusDiff(fileName) {
   selectedDiffFileName.value = fileName
 
+  manualScrolling.value = false
+
   diffRefs.value[fileName].scrollIntoView({
     behavior: 'smooth',
     block: 'start',
   })
 }
 
+function handleScroll() {
+  const scrollContainer = document.querySelector('.diff-container')
+  if (!scrollContainer) return
+
+  if (!manualScrolling.value) return
+
+  const scrollTop = scrollContainer.scrollTop
+  let currentTopFile = null
+
+  for (const fileName of Object.keys(diffRefs.value)) {
+    const element = diffRefs.value[fileName]
+    if (element.offsetTop - scrollTop >= 0) {
+      currentTopFile = fileName
+      break
+    }
+  }
+
+  if (currentTopFile && currentTopFile !== selectedDiffFileName.value) {
+    selectedDiffFileName.value = currentTopFile
+    scrollSidebarItemIntoView(selectedDiffFileName.value)
+  }
+}
+
+function scrollSidebarItemIntoView(fileName) {
+  const sidebarItem = sidebarRefs.value[fileName]
+  if (sidebarItem) {
+    sidebarItem.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
+function onScrollEnd() {
+  manualScrolling.value = true
+}
+
 onMounted(() => {
   repoPath.value = localStorage.getItem('repoPath') || ''
   leftBranch.value = localStorage.getItem('leftBranch') || ''
   rightBranch.value = localStorage.getItem('rightBranch') || ''
+
+  const scrollContainer = document.querySelector('.diff-container')
+  if (scrollContainer) {
+    scrollContainer.addEventListener('scroll', handleScroll)
+    scrollContainer.addEventListener('scrollend', onScrollEnd)
+  }
+})
+
+onUnmounted(() => {
+  const scrollContainer = document.querySelector('.diff-container')
+  if (scrollContainer) {
+    scrollContainer.removeEventListener('scroll', handleScroll)
+    scrollContainer.removeEventListener('scrollend', onScrollEnd)
+  }
 })
 </script>
 
@@ -94,13 +146,19 @@ onMounted(() => {
       </label>
       <button @click="compareBranches">Compare</button>
     </div>
-    <div style="overflow: auto; margin-top: 1rem; display: grid; grid-template-columns: 200px 1fr;">
+    <div style="overflow: auto; margin-top: 1rem; display: grid; grid-template-columns: 300px 1fr;">
       <div style="overflow: auto;">
-          <div v-for="diffFile in diffFiles" @click="focusDiff(diffFile.fileName)" class="sidebar-item" :class="{ active: selectedDiffFileName === diffFile.fileName }">
+          <div
+            v-for="diffFile in diffFiles"
+            @click="focusDiff(diffFile.fileName)"
+            class="sidebar-item"
+            :class="{ active: selectedDiffFileName === diffFile.fileName }"
+            :ref="el => { sidebarRefs[diffFile.fileName] = el }"
+          >
             {{ diffFile.fileName }}
           </div>
       </div>
-      <div style="overflow: auto;">
+      <div class="diff-container" style="overflow: auto;">
         <div :ref="element => { diffRefs[fileName] = element }" v-html="diffByFile[fileName]" v-for="fileName of Object.keys(diffByFile)"></div>
       </div>
     </div>
