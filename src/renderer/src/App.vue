@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import Versions from './components/Versions.vue'
+// import Versions from './components/Versions.vue'
 import * as Diff2html from 'diff2html'
 import * as Diff from 'diff'
 import 'diff2html/bundles/css/diff2html.min.css'
+import { ColorSchemeType } from 'diff2html/lib/types'
 
 const repoPath = ref('')
 const leftBranch = ref('')
 const rightBranch = ref('')
-const diffFiles = ref([])
+const diffFiles = ref([]) as any
 const diffByFile = ref({})
 const selectedDiffFileName = ref('')
 const diffRefs = ref({})
@@ -56,8 +57,7 @@ function getDiff(diff) {
   const unifiedDiff = Diff.formatPatch(diff)
   const diffJson = Diff2html.parse(unifiedDiff)
   return Diff2html.html(diffJson, {
-    colorScheme: 'dark',
-    highlight: true,
+    colorScheme: ColorSchemeType.DARK,
   })
 }
 
@@ -79,7 +79,7 @@ function handleScroll() {
   if (!manualScrolling.value) return
 
   const scrollTop = scrollContainer.scrollTop
-  let currentTopFile = null
+  let currentTopFile: string | null = null
 
   for (const fileName of Object.keys(diffRefs.value)) {
     const element = diffRefs.value[fileName]
@@ -163,5 +163,4 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
-  <!-- <Versions /> -->
 </template>
