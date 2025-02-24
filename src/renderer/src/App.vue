@@ -46,7 +46,7 @@ async function compareBranches() {
     diffByFileData[fileName] = getDiff(diffItem)
 
     return {
-      fileName,
+      fileName
     }
   })
 
@@ -57,7 +57,7 @@ function getDiff(diff) {
   const unifiedDiff = Diff.formatPatch(diff)
   const diffJson = Diff2html.parse(unifiedDiff)
   return Diff2html.html(diffJson, {
-    colorScheme: ColorSchemeType.DARK,
+    colorScheme: ColorSchemeType.DARK
   })
 }
 
@@ -68,7 +68,7 @@ function focusDiff(fileName) {
 
   diffRefs.value[fileName].scrollIntoView({
     behavior: 'smooth',
-    block: 'start',
+    block: 'start'
   })
 }
 
@@ -128,38 +128,58 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div style="display: grid; grid-template-rows: auto auto 1fr; padding: 1.5rem; overflow: auto; height: 100%;">
+  <div
+    style="
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      padding: 1.5rem;
+      overflow: auto;
+      height: 100%;
+    "
+  >
     <div>
       <label>
         <div>Repo Path</div>
-        <input type="text" v-model="repoPath" class="full-width input" spellcheck="false">
+        <input type="text" v-model="repoPath" class="full-width input" spellcheck="false" />
       </label>
     </div>
-    <div style="display: flex; align-items: flex-end; gap: 1rem; margin-top: 0.5rem;">
+    <div style="display: flex; align-items: flex-end; gap: 1rem; margin-top: 0.5rem">
       <label>
         <div>Left Branch</div>
-        <input type="text" v-model="leftBranch" class="full-width input" spellcheck="false">
+        <input type="text" v-model="leftBranch" class="full-width input" spellcheck="false" />
       </label>
       <label>
         <div>Right Branch</div>
-        <input type="text" v-model="rightBranch" class="full-width input" spellcheck="false">
+        <input type="text" v-model="rightBranch" class="full-width input" spellcheck="false" />
       </label>
       <button @click="compareBranches">Compare</button>
     </div>
-    <div style="overflow: auto; margin-top: 1rem; display: grid; grid-template-columns: 300px 1fr;">
-      <div style="overflow: auto;">
-          <div
-            v-for="diffFile in diffFiles"
-            @click="focusDiff(diffFile.fileName)"
-            class="sidebar-item"
-            :class="{ active: selectedDiffFileName === diffFile.fileName }"
-            :ref="el => { sidebarRefs[diffFile.fileName] = el }"
-          >
-            {{ diffFile.fileName }}
-          </div>
+    <div style="overflow: auto; margin-top: 1rem; display: grid; grid-template-columns: 300px 1fr">
+      <div style="overflow: auto">
+        <div
+          v-for="diffFile in diffFiles"
+          @click="focusDiff(diffFile.fileName)"
+          class="sidebar-item"
+          :class="{ active: selectedDiffFileName === diffFile.fileName }"
+          :ref="
+            (el) => {
+              sidebarRefs[diffFile.fileName] = el
+            }
+          "
+        >
+          {{ diffFile.fileName }}
+        </div>
       </div>
-      <div class="diff-container" style="overflow: auto;">
-        <div :ref="element => { diffRefs[fileName] = element }" v-html="diffByFile[fileName]" v-for="fileName of Object.keys(diffByFile)"></div>
+      <div class="diff-container" style="overflow: auto">
+        <div
+          :ref="
+            (element) => {
+              diffRefs[fileName] = element
+            }
+          "
+          v-html="diffByFile[fileName]"
+          v-for="fileName of Object.keys(diffByFile)"
+        ></div>
       </div>
     </div>
   </div>

@@ -55,7 +55,7 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.handle('compareBranches', async(_event, { repoPath, leftBranch, rightBranch }) => {
+  ipcMain.handle('compareBranches', async (_event, { repoPath, leftBranch, rightBranch }) => {
     console.log('compareBranches', { repoPath, leftBranch, rightBranch })
 
     // substitute ~ with user home directory
